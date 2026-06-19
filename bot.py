@@ -122,28 +122,6 @@ def cargar_catalogo() -> list:
     return cat
 
 
-def buscar_repuesto(consulta: str, catalogo: list):
-    consulta_n = normalizar(consulta)
-    # Busqueda exacta por codigo
-    for rep in catalogo:
-        if normalizar(rep["codigo"]) == consulta_n:
-            return rep
-    # Busqueda por palabras clave, ignorando stopwords
-    palabras = [p for p in consulta_n.split() if p not in STOPWORDS]
-    if not palabras:
-        return None
-    mejores = []
-    for rep in catalogo:
-        texto_rep = normalizar(f"{rep['nombre']} {rep['marca']} {rep['modelo']}")
-        if all(p in texto_rep for p in palabras):
-            mejores.append(rep)
-    if len(mejores) == 1:
-        return mejores[0]
-    if len(mejores) > 1:
-        return sorted(mejores, key=lambda r: r["stock"], reverse=True)[0]
-    return None
-
-
 def buscar_todos(consulta: str, catalogo: list) -> list:
     """Devuelve TODOS los productos que coinciden con la consulta."""
     consulta_n = normalizar(consulta)
@@ -297,8 +275,8 @@ def manejar_inicio(sesion: dict, mensaje: str):
         return BIENVENIDA, ESPERANDO_REPUESTO
 
     # Intentar buscar directamente (las stopwords se ignoran en buscar_repuesto)
-    rep = buscar_repuesto(consulta, CATALOGO)
-    if rep is not None:
+    rep = buscar_todos(consulta, CATALOGO)
+    if rep:
         encabezado = "Hola! Bienvenido a *Tu Repuesto Cordoba*.\n"
         respuesta, nuevo_estado = _buscar_y_responder(sesion, consulta)
         return encabezado + respuesta, nuevo_estado
